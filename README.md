@@ -279,7 +279,7 @@ https://github.com/mrts/docker-qt-cmake-gtest-valgrind-ubuntu/blob/master/Docker
 
 - Install _Google Test_ and _OpenSSL_ with _vcpkg_:
 
-      .\vcpkg install --recurse --triplet x64-windows --clean-after-build gtest openssl
+      .\vcpkg install --recurse --triplet x64-windows --clean-after-build gtest openssl pthread
 
 - Install _Qt_ with the official [_Qt Online Installer_](https://www.qt.io/download-qt-installer),
   choose _Custom installation > Qt 6.2.4 > MSVC 2019 64-bit_.

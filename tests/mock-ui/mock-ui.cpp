@@ -23,7 +23,7 @@
 #include "ui.hpp"
 #include "mock-ui.hpp"
 
-WebEidUI* WebEidUI::createAndShowDialog(const CommandType)
+WebEidUI* WebEidUI::createAndShowDialog(const CommandType, bool alreadySigned)
 {
     static MockUI instance;
     return &instance;

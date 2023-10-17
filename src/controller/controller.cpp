@@ -27,11 +27,15 @@
 #include "threads/commandhandlerrunthread.hpp"
 #include "threads/waitforcardthread.hpp"
 
+#include <thread>
+#include <chrono>
+
 #include "utils/utils.hpp"
 #include "inputoutputmode.hpp"
 #include "writeresponse.hpp"
 
 #include <QApplication>
+#include <QTimer>
 
 using namespace pcsc_cpp;
 using namespace electronic_id;
@@ -43,6 +47,8 @@ namespace
 // etc.
 const QString RESP_TECH_ERROR = QStringLiteral("ERR_WEBEID_NATIVE_FATAL");
 const QString RESP_USER_CANCEL = QStringLiteral("ERR_WEBEID_USER_CANCELLED");
+
+bool alreadySigned = false;
 
 QVariantMap makeErrorObject(const QString& errorCode, const QString& errorMessage)
 {
@@ -72,6 +78,7 @@ void Controller::run()
     qInfo() << qApp->applicationName() << "app" << qApp->applicationVersion() << "running in"
             << (isInStdinMode ? "stdin/stdout" : "command-line") << "mode";
 
+
     try {
         // TODO: cut out stdin mode separate class to avoid bugs in safari mode
         if (isInStdinMode) {
@@ -81,19 +88,32 @@ void Controller::run()
                                   {{QStringLiteral("version"), qApp->applicationVersion()}},
                                   "get-version");
 
-            command = readCommandFromStdin();
+            std::thread t1([&]() {
+                 command = readCommandFromStdin();
+           });
+           std::this_thread::sleep_for(std::chrono::seconds(90));
+           t1.detach();
         }
 
-        REQUIRE_NON_NULL(command)
+        REQUIRE_NON_NULL(command);
+
         switch (command->first) {
         case CommandType::ABOUT:
             WebEidUI::showAboutPage();
+            command = nullptr;
+            return;
+        case CommandType::PING:
+            writeResponseToStdOut(true, {}, "pong");
+            QTimer::singleShot(0, this, &Controller::run);
+            command = nullptr;
             return;
         case CommandType::QUIT:
             // If quit is requested, respond with empty JSON object and quit immediately.
             qInfo() << "Quit requested, exiting";
             writeResponseToStdOut(true, {}, "quit");
             emit quit();
+            // command = nullptr;
+            // QTimer::singleShot(0, this, &Controller::run);
             return;
         default:
             break;
@@ -120,7 +140,7 @@ void Controller::startCommandExecution()
     saveChildThreadPtrAndConnectFailureFinish(waitForCardThread);
 
     // UI setup.
-    window = WebEidUI::createAndShowDialog(commandHandler->commandType());
+    window = WebEidUI::createAndShowDialog(commandHandler->commandType(), alreadySigned);
     connect(this, &Controller::statusUpdate, window, &WebEidUI::onSmartCardStatusUpdate);
     connectOkCancelWaitingForPinPad();
 
@@ -274,6 +294,10 @@ void Controller::onCommandHandlerConfirmCompleted(const QVariantMap& res)
 
     qDebug() << "Command completed";
 
+    if (command->first == CommandType::SIGN){
+        alreadySigned = true;
+    }
+
     // Schedule application exit when the UI dialog is destroyed.
     connect(window, &WebEidUI::destroyed, this, &Controller::exit);
 
@@ -363,11 +387,32 @@ void Controller::onCriticalFailure(const QString& error)
 
 void Controller::exit()
 {
+
     if (window) {
         window->disconnect();
         window = nullptr;
     }
     waitForChildThreads();
+
+    if (command->first == CommandType::SIGN || command->first == CommandType::GET_SIGNING_CERTIFICATE){
+        command = nullptr;
+        QTimer::singleShot(0, this, &Controller::run);    
+    } else {
+        emit quit();    
+    }
+}
+
+void Controller::forceExit()
+{
+    qInfo() << "Quit timetout, exiting";
+
+    if (window) {
+        window->disconnect();
+        window = nullptr;
+    }
+    waitForChildThreads();
+
+    command = nullptr;
     emit quit();
 }
 

@@ -54,6 +54,9 @@ public:
     static void showAboutPage();
     static void showFatalErrorPage();
 
+    bool alreadySigned = false; 
+    void setAlreadySigned();
+
     // slots
     void onSmartCardStatusUpdate(const RetriableError status) final;
     void onMultipleCertificatesReady(

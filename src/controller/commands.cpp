@@ -32,6 +32,7 @@ const QString CMDLINE_AUTHENTICATE = QStringLiteral("authenticate");
 const QString CMDLINE_SIGN = QStringLiteral("sign");
 // A special command for stdin mode for quitting the application after sending the version.
 const QString STDINMODE_QUIT = QStringLiteral("quit");
+const QString STDINMODE_PING = QStringLiteral("ping");
 
 CommandType commandNameToCommandType(const QString& cmdName)
 {
@@ -40,6 +41,7 @@ CommandType commandNameToCommandType(const QString& cmdName)
         {CMDLINE_AUTHENTICATE, CommandType::AUTHENTICATE},
         {CMDLINE_SIGN, CommandType::SIGN},
         {STDINMODE_QUIT, CommandType::QUIT},
+        {STDINMODE_PING, CommandType::PING},
     };
 
     try {

@@ -41,7 +41,7 @@ public:
     explicit WebEidUI(QWidget* parent = nullptr) : QDialog(parent) {}
 
     // Factory function that creates and shows the dialog that implements this interface.
-    static observer_ptr<WebEidUI> createAndShowDialog(const CommandType command);
+    static observer_ptr<WebEidUI> createAndShowDialog(const CommandType command, const bool alreadySigned);
 
     static void showAboutPage();
     static void showFatalError();
@@ -70,4 +70,5 @@ public: // slots
     virtual void onSigningCertificateMismatch() = 0;
     virtual void onVerifyPinFailed(const electronic_id::VerifyPinFailed::Status status,
                                    const qint8 retriesLeft) = 0;
+
 };

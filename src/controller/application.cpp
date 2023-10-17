@@ -37,6 +37,7 @@
 
 inline CommandWithArguments::second_type parseArgumentJson(const QString& argumentStr)
 {
+    qDebug() << argumentStr.toUtf8();
     const auto argumentJson = QJsonDocument::fromJson(argumentStr.toUtf8());
 
     if (!argumentJson.isObject()) {
@@ -122,6 +123,11 @@ CommandWithArgumentsPtr Application::parseArgs()
                        "This could be the path to the app manifest (Firefox) or "
                        "the origin of the extension that started it (Chrome)."),
         QStringLiteral("argument-from-extension"));
+
+    QCommandLineOption parentWindow(QStringLiteral("parent-window"),
+                                    QStringLiteral("Parent window handle (unused)"),
+                                    QStringLiteral("parent-window"));
+
     QCommandLineOption aboutArgument(QStringLiteral("about"),
                                      QStringLiteral("Show Web-eID about window"));
     QCommandLineParser parser;
@@ -135,7 +141,7 @@ CommandWithArgumentsPtr Application::parseArgs()
                         "Command-line mode, read commands from command line arguments instead of "
                         "standard input."},
                        aboutArgument,
-                       argumentFromExtension});
+                       argumentFromExtension, parentWindow});
 
     static const auto COMMANDS = "'" + CMDLINE_GET_SIGNING_CERTIFICATE + "', '"
         + CMDLINE_AUTHENTICATE + "', '" + CMDLINE_SIGN + "'.";
@@ -167,6 +173,10 @@ CommandWithArgumentsPtr Application::parseArgs()
     if (parser.isSet(argumentFromExtension)) {
         // https://bugs.chromium.org/p/chromium/issues/detail?id=354597#c2
         qDebug() << "Argument from extension is unused" << parser.value(argumentFromExtension);
+    }
+    if (parser.isSet(parentWindow)) {
+        // https://bugs.chromium.org/p/chromium/issues/detail?id=354597#c2
+        qDebug() << "Parent window handle is unused" << parser.value(parentWindow);
     }
     if (parser.isSet(aboutArgument)) {
         return std::make_unique<CommandWithArguments>(CommandType::ABOUT, QVariantMap());

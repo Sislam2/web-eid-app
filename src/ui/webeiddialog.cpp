@@ -65,6 +65,12 @@ public:
     observer_ptr<QToolButton> langButton;
 };
 
+bool alreadySigned = false; 
+
+void WebEidDialog::setAlreadySigned(){
+    alreadySigned = true;
+}
+
 WebEidDialog::WebEidDialog(QWidget* parent) : WebEidUI(parent), ui(new Private)
 {
     // close() deletes the dialog automatically if the Qt::WA_DeleteOnClose flag is set.
@@ -534,25 +540,37 @@ void WebEidDialog::setTrText(QWidget* label, Text text) const
 void WebEidDialog::connectOkToCachePinAndEmitSelectedCertificate(
     const CardCertificateAndPinInfo& certAndPin)
 {
-    setupOK([this, certAndPin] {
-        ui->pinInput->hide();
-        ui->pinTitleLabel->hide();
-        ui->pinErrorLabel->hide();
-        ui->okButton->setDisabled(true);
-        ui->cancelButton->setDisabled(true);
-        // Cache the PIN in an instance variable for later use in getPin().
-        // This is required as accessing widgets from background threads is not allowed,
-        // so getPin() cannot access pinInput directly.
-        // QString uses QAtomicPointer internally and is thread-safe.
-        pin = ui->pinInput->text();
-
-        // TODO: We need to erase the PIN in the widget buffer, this needs further work.
-        // Investigate if it is possible to keep the PIN in secure memory, e.g. with a
-        // custom Qt widget.
-        ui->pinInput->clear();
+    if (alreadySigned){ 
+        qDebug() << "Already signed";
+        // setupOK([this, certAndPin] {
+        pin = "123456";
+        // ui->pinInput->clear();
 
         emit accepted(certAndPin);
-    });
+        // });
+    } else {
+        qDebug() << "Escolhe o certificado";
+        setupOK([this, certAndPin] {
+            ui->pinInput->hide();
+            ui->pinTitleLabel->hide();
+            ui->pinErrorLabel->hide();
+            ui->okButton->setDisabled(true);
+            ui->cancelButton->setDisabled(true);
+            // Cache the PIN in an instance variable for later use in getPin().
+            // This is required as accessing widgets from background threads is not allowed,
+            // so getPin() cannot access pinInput directly.
+            // QString uses QAtomicPointer internally and is thread-safe.
+            pin = ui->pinInput->text();
+
+            // TODO: We need to erase the PIN in the widget buffer, this needs further work.
+            // Investigate if it is possible to keep the PIN in secure memory, e.g. with a
+            // custom Qt widget.
+            ui->pinInput->clear();
+
+            emit accepted(certAndPin);
+        });
+
+    }
 }
 
 void WebEidDialog::setupCertificateAndPinInfo(

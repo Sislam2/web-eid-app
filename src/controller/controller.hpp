@@ -80,6 +80,7 @@ private:
     void stopCardEventMonitorThread();
     void disposeUI();
     void exit();
+    void forceExit();
     void waitForChildThreads();
     CommandType commandType();
 

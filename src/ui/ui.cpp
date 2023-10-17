@@ -22,13 +22,17 @@
 
 #include "webeiddialog.hpp"
 
-observer_ptr<WebEidUI> WebEidUI::createAndShowDialog(const CommandType command)
+observer_ptr<WebEidUI> WebEidUI::createAndShowDialog(const CommandType command, const bool alreadySigned)
 {
     auto* dialog = new WebEidDialog {};
     dialog->showWaitingForCardPage(command);
     dialog->activateWindow();
     dialog->show();
     dialog->raise();
+    
+    if (alreadySigned){
+        dialog->setAlreadySigned();
+    }
 
     return dialog;
 }
